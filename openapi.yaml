@@ -1,0 +1,297 @@
+openapi: "3.0.3"
+info:
+  title: FFW Slot Selector
+  version: "0.1.0"
+
+paths:
+  /book/{user_uuid}:
+    get:
+      operationId: getBookingPage
+      summary: Get available slots for a user
+      parameters:
+        - $ref: "#/components/parameters/user_uuid"
+      responses:
+        "200":
+          description: User info and available slots
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingPageResponse"
+        "404":
+          description: UUID not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: bookSlot
+      summary: Book a slot
+      parameters:
+        - $ref: "#/components/parameters/user_uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookSlotRequest"
+      responses:
+        "200":
+          description: Booking confirmed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookSlotResponse"
+        "404":
+          description: UUID not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Slot is full
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/{admin_uuid}/users/{user_uuid}:
+    delete:
+      operationId: deleteUser
+      summary: Delete a user
+      parameters:
+        - $ref: "#/components/parameters/admin_uuid"
+        - $ref: "#/components/parameters/user_uuid"
+      responses:
+        "204":
+          description: User deleted
+        "403":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/{admin_uuid}/slots:
+    get:
+      operationId: listSlots
+      summary: List all slots
+      parameters:
+        - $ref: "#/components/parameters/admin_uuid"
+      responses:
+        "200":
+          description: List of slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Slot"
+        "403":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createSlot
+      summary: Create a new slot
+      parameters:
+        - $ref: "#/components/parameters/admin_uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSlotRequest"
+      responses:
+        "200":
+          description: Created slot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Slot"
+        "403":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/{admin_uuid}/slots/{slot_id}:
+    delete:
+      operationId: deleteSlot
+      summary: Delete a slot
+      parameters:
+        - $ref: "#/components/parameters/admin_uuid"
+        - $ref: "#/components/parameters/slot_id"
+      responses:
+        "204":
+          description: Slot deleted
+        "403":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Slot not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/{admin_uuid}/users:
+    get:
+      operationId: listUsers
+      summary: List all users
+      parameters:
+        - $ref: "#/components/parameters/admin_uuid"
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+        "403":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      operationId: createUser
+      summary: Create a new user with a generated token
+      parameters:
+        - $ref: "#/components/parameters/admin_uuid"
+      responses:
+        "200":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "403":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  parameters:
+    admin_uuid:
+      name: admin_uuid
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    user_uuid:
+      name: user_uuid
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    slot_id:
+      name: slot_id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  schemas:
+    Slot:
+      type: object
+      required: [id, label, max_bookings, current_bookings]
+      properties:
+        id:
+          type: integer
+          format: int64
+        label:
+          type: string
+        max_bookings:
+          type: integer
+          format: int32
+        current_bookings:
+          type: integer
+          format: int32
+
+    BookingPageResponse:
+      type: object
+      required: [user_name, user_email, slots]
+      properties:
+        user_name:
+          type: string
+        user_email:
+          type: string
+        current_slot_id:
+          type: integer
+          format: int64
+          nullable: true
+        slots:
+          type: array
+          items:
+            $ref: "#/components/schemas/Slot"
+
+    BookSlotRequest:
+      type: object
+      required: [slot_id, name, email]
+      properties:
+        slot_id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+
+    BookSlotResponse:
+      type: object
+      required: [slot_id, label]
+      properties:
+        slot_id:
+          type: integer
+          format: int64
+        label:
+          type: string
+
+    User:
+      type: object
+      required: [token, name, email]
+      properties:
+        token:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+
+    CreateSlotRequest:
+      type: object
+      required: [label, max_bookings]
+      properties:
+        label:
+          type: string
+        max_bookings:
+          type: integer
+          format: int32
+
+    ErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string

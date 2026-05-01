@@ -1,0 +1,10 @@
+/.direnv
+/backend/src/generated
+/frontend/static/frontend.js
+/frontend/static/frontend.d.ts
+/frontend/static/frontend_bg.wasm
+/frontend/static/frontend_bg.wasm.d.ts
+/data.db
+/data.db-shm
+/data.db-wal
+/target

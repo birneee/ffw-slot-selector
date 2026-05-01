@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>150 Jahre Feuerwehr Eibach - Gebuchtes Zeitfenster</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="https://www.nerdfonts.com/assets/css/webfont.css" />
+</head>
+<body>
+  <div id="no-js-warning">
+    Dein Browser scheint JavaScript oder WebAssembly nicht zu unterstützen.
+    Aktiviere es oder verwende einen anderen Browser.
+  </div>
+  <div class="container">
+    <h1>150 Jahre Feuerwehr Eibach<br>Bungee Jumping<br>Deine Gebuchtes Zeitfenster</h1>
+    <div class="info-card">
+      <div class="info-row">
+        <span class="info-label">Name</span>
+        <span class="info-value loading" id="view-name">Lädt…</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">E-Mail</span>
+        <span class="info-value loading" id="view-email">Lädt…</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Zeitfenster</span>
+        <span class="info-value loading" id="view-slot">Lädt…</span>
+      </div>
+    </div>
+    <a id="view-edit-btn" class="btn btn-primary" href="#">Zeitfenster buchen</a>
+  </div>
+  <script type="module">
+    import init from '/frontend.js';
+    await init();
+  </script>
+</body>
+</html>

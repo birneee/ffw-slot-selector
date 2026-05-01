@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="https://www.nerdfonts.com/assets/css/webfont.css" />
+</head>
+<body>
+  <div id="no-js-warning">
+    Dein Browser scheint JavaScript oder WebAssembly nicht zu unterstützen.
+    Aktiviere es oder verwende einen anderen Browser.
+  </div>
+  <div class="container">
+    <h1>Admin</h1>
+
+    <section>
+      <h2>Benutzer</h2>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Token</th>
+            <th>Name</th>
+            <th>E-Mail</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="users-tbody">
+          <tr><td colspan="4" class="admin-empty loading">Lädt…</td></tr>
+        </tbody>
+      </table>
+      <button id="add-user-btn" class="btn btn-primary">Benutzer hinzufügen</button>
+    </section>
+
+    <section>
+      <h2>Zeitslots</h2>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Bezeichnung</th>
+            <th>Max.</th>
+            <th>Gebucht</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="slots-tbody">
+          <tr><td colspan="4" class="admin-empty loading">Lädt…</td></tr>
+        </tbody>
+      </table>
+      <form id="create-slot-form">
+        <div class="slot-form-row">
+          <input type="text" id="slot-label" placeholder="Bezeichnung" class="field-input" required />
+          <input type="number" id="slot-max" placeholder="Max." class="field-input" min="1" required />
+          <button type="submit" id="create-slot-btn" class="btn btn-primary">Zeitslot hinzufügen</button>
+        </div>
+      </form>
+    </section>
+  </div>
+  <script type="module">
+    import init from '/frontend.js';
+    await init();
+  </script>
+</body>
+</html>

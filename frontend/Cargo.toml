@@ -1,0 +1,40 @@
+[package]
+name = "frontend"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "=0.2.117"
+wasm-bindgen-futures = "=0.4.42"
+web-sys = { version = "0.3", features = [
+    "Window",
+    "Location",
+    "Document",
+    "Element",
+    "HtmlElement",
+    "HtmlInputElement",
+    "HtmlSelectElement",
+    "HtmlFormElement",
+    "NodeList",
+    "Event",
+    "MouseEvent",
+    "EventTarget",
+    "console",
+] }
+js-sys = "0.3"
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+reqwest = { version = "0.12", default-features = false, features = ["json"] }
+progenitor-client = "0.9"
+
+[build-dependencies]
+progenitor = "0.9"
+openapiv3 = "2"
+serde_yaml = "0.9"
+syn = { version = "2", features = ["full"] }
+prettyplease = "0.2"

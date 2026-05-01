@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>150 Jahre Feuerwehr Eibach - Zeitfenster bearbeiten</title>
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="https://www.nerdfonts.com/assets/css/webfont.css" />
+</head>
+<body>
+  <div id="no-js-warning">
+    Dein Browser scheint JavaScript oder WebAssembly nicht zu unterstützen.
+    Aktiviere es oder verwende einen anderen Browser.
+  </div>
+  <div class="container">
+    <h1>Zeitfenster bearbeiten</h1>
+    <form id="edit-form" class="edit-form">
+      <div class="field-group">
+        <label for="name" class="field-label">Name auf Personalausweis</label>
+        <input type="text" id="name" name="name" class="field-input" required />
+      </div>
+      <div class="field-group">
+        <label for="email" class="field-label">E-Mail für Rückfragen</label>
+        <input type="email" id="email" name="email" class="field-input" required />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Zeitfenster wählen</label>
+        <div id="slots-grid" class="slots-grid">
+          <p class="loading">Lädt…</p>
+        </div>
+      </div>
+      <div id="form-error" class="form-error hidden"></div>
+      <button type="submit" class="btn btn-primary">Speichern</button>
+    </form>
+  </div>
+  <script type="module">
+    import init from '/frontend.js';
+    await init();
+  </script>
+</body>
+</html>
