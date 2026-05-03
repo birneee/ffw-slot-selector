@@ -55,6 +55,37 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
   /admin/{admin_uuid}/users/{user_uuid}:
+    patch:
+      operationId: updateUser
+      summary: Update a user's name and email
+      parameters:
+        - $ref: "#/components/parameters/admin_uuid"
+        - $ref: "#/components/parameters/user_uuid"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "403":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
     delete:
       operationId: deleteUser
       summary: Delete a user
@@ -64,6 +95,29 @@ paths:
       responses:
         "204":
           description: User deleted
+        "403":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/{admin_uuid}/users/{user_uuid}/booking:
+    delete:
+      operationId: resetBooking
+      summary: Clear a user's slot booking
+      parameters:
+        - $ref: "#/components/parameters/admin_uuid"
+        - $ref: "#/components/parameters/user_uuid"
+      responses:
+        "204":
+          description: Booking cleared
         "403":
           description: Unauthorized
           content:
@@ -278,6 +332,9 @@ components:
           type: string
         email:
           type: string
+        slot_label:
+          type: string
+          nullable: true
 
     CreateSlotRequest:
       type: object
@@ -288,6 +345,20 @@ components:
         max_bookings:
           type: integer
           format: int32
+
+    UpdateUserRequest:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        slot_id:
+          type: integer
+          format: int64
+          nullable: true
 
     ErrorResponse:
       type: object

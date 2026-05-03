@@ -4,31 +4,49 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>150 Jahre Feuerwehr Eibach - Gebuchtes Zeitfenster</title>
+  <link rel="icon" type="image/png" href="/wappen.png" />
   <link rel="stylesheet" href="/style.css" />
   <link rel="stylesheet" href="https://www.nerdfonts.com/assets/css/webfont.css" />
 </head>
 <body>
-  <div id="no-js-warning">
+  <div id="no-js-warning" class="warning-box">
     Dein Browser scheint JavaScript oder WebAssembly nicht zu unterstützen.
     Aktiviere es oder verwende einen anderen Browser.
   </div>
+  <div class="page-header">
+    <img src="/wappen.png" alt="Wappen Eibach" class="header-wappen" />
+    <img src="/150-jahre-logo.png" alt="150 Jahre Feuerwehr Eibach" class="header-logo" />
+  </div>
+  <h1>150 Jahre Feuerwehr Eibach<br>Bungee Jumping</h1>
+  <div class="info-box">
+    Dieser QR-Code auf Ihrem Ticket ist personalisiert, geben Sie diesen Link unter keinen Umständen weiter.
+  </div>
+  <div class="info-box">
+    Alle Infos zum Bungeejumping finden Sie unter <a href="https://www.eibach2026.de/bungeejumping" target="_blank">www.eibach2026.de/bungeejumping</a>.
+  </div>
   <div class="container">
-    <h1>150 Jahre Feuerwehr Eibach<br>Bungee Jumping<br>Deine Gebuchtes Zeitfenster</h1>
-    <div class="info-card">
-      <div class="info-row">
-        <span class="info-label">Name</span>
-        <span class="info-value loading" id="view-name">Lädt…</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">E-Mail</span>
-        <span class="info-value loading" id="view-email">Lädt…</span>
-      </div>
-      <div class="info-row">
-        <span class="info-label">Zeitfenster</span>
-        <span class="info-value loading" id="view-slot">Lädt…</span>
+    <div class="not-booked">
+      <h2>Sie haben noch kein Zeitfenster für Ihren Sprung gebucht</h2>
+      <a id="view-edit-btn" class="btn btn-primary" href="#">Jetzt Zeitfenster buchen</a>
+    </div>
+    <div class="booked">
+      <h2>Ihr Gebuchtes Zeitfenster</h2>
+      <div class="info-card">
+        <div class="info-row">
+          <span class="info-label">Name</span>
+          <span class="info-value loading" id="view-name">Lädt…</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">E-Mail</span>
+          <span class="info-value loading" id="view-email">Lädt…</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Zeitfenster</span>
+          <span class="info-value loading" id="view-slot">Lädt…</span>
+        </div>
       </div>
     </div>
-    <a id="view-edit-btn" class="btn btn-primary" href="#">Zeitfenster buchen</a>
+    Bei Fragen wenden Sie sich an info@feuerwehreibach.de
   </div>
   <script type="module">
     import init from '/frontend.js';

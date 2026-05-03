@@ -9,10 +9,22 @@ pub struct UserRow {
 
 pub async fn get_user_by_uuid(pool: &SqlitePool, uuid: Uuid) -> sqlx::Result<Option<UserRow>> {
     let uuid = uuid.to_string();
-    let row = sqlx::query!("SELECT uuid, name, email FROM users WHERE uuid = ?", uuid)
-        .fetch_optional(pool)
-        .await?;
-    Ok(row.map(|r| UserRow { uuid: r.uuid, name: r.name, email: r.email }))
+    let row = sqlx::query!(
+        r#"
+        SELECT u.uuid, COALESCE(b.name, '') AS "name!: String", COALESCE(b.email, '') AS "email!: String"
+        FROM users u
+        LEFT JOIN bookings b ON b.user_uuid = u.uuid
+        WHERE u.uuid = ?
+        "#,
+        uuid
+    )
+    .fetch_optional(pool)
+    .await?;
+    Ok(row.map(|r| UserRow {
+        uuid: r.uuid,
+        name: r.name,
+        email: r.email,
+    }))
 }
 
 pub struct SlotRow {
@@ -56,6 +68,7 @@ pub async fn get_current_slot_id(pool: &SqlitePool, user_uuid: &str) -> sqlx::Re
 pub enum BookResult {
     Ok { slot_id: i64, label: String },
     SlotFull,
+    AlreadyBooked,
 }
 
 pub async fn book_slot(
@@ -65,20 +78,18 @@ pub async fn book_slot(
     email: &str,
     slot_id: i64,
 ) -> sqlx::Result<BookResult> {
-    let mut tx = pool.begin().await?;
-
-    sqlx::query!(
-        "UPDATE users SET name = ?, email = ? WHERE uuid = ?",
-        name,
-        email,
+    let existing = sqlx::query_scalar!(
+        "SELECT slot_id FROM bookings WHERE user_uuid = ?",
         user_uuid
     )
-    .execute(&mut *tx)
+    .fetch_optional(pool)
     .await?;
 
-    sqlx::query!("DELETE FROM bookings WHERE user_uuid = ?", user_uuid)
-        .execute(&mut *tx)
-        .await?;
+    if existing.is_some() {
+        return Ok(BookResult::AlreadyBooked);
+    }
+
+    let mut tx = pool.begin().await?;
 
     let slot = sqlx::query!(
         r#"
@@ -104,9 +115,11 @@ pub async fn book_slot(
     }
 
     sqlx::query!(
-        "INSERT INTO bookings (user_uuid, slot_id) VALUES (?, ?)",
+        "INSERT INTO bookings (user_uuid, slot_id, name, email) VALUES (?, ?, ?, ?)",
         user_uuid,
-        slot_id
+        slot_id,
+        name,
+        email,
     )
     .execute(&mut *tx)
     .await?;
@@ -120,6 +133,7 @@ pub struct UserRecord {
     pub token: String,
     pub name: String,
     pub email: String,
+    pub slot_label: Option<String>,
 }
 
 pub async fn is_valid_admin(pool: &SqlitePool, admin_uuid: &str) -> sqlx::Result<bool> {
@@ -133,24 +147,83 @@ pub async fn is_valid_admin(pool: &SqlitePool, admin_uuid: &str) -> sqlx::Result
 }
 
 pub async fn list_users(pool: &SqlitePool) -> sqlx::Result<Vec<UserRecord>> {
-    let rows = sqlx::query!("SELECT uuid, name, email FROM users ORDER BY uuid")
-        .fetch_all(pool)
-        .await?;
+    let rows = sqlx::query!(
+        r#"
+        SELECT u.uuid,
+               COALESCE(b.name, '')  AS "name!: String",
+               COALESCE(b.email, '') AS "email!: String",
+               s.label               AS slot_label
+        FROM users u
+        LEFT JOIN bookings b ON b.user_uuid = u.uuid
+        LEFT JOIN slots s   ON s.id = b.slot_id
+        ORDER BY u.uuid
+        "#
+    )
+    .fetch_all(pool)
+    .await?;
     Ok(rows
         .into_iter()
-        .map(|r| UserRecord { token: r.uuid, name: r.name, email: r.email })
+        .map(|r| UserRecord {
+            token: r.uuid,
+            name: r.name,
+            email: r.email,
+            slot_label: r.slot_label,
+        })
         .collect())
 }
 
 pub async fn create_user(pool: &SqlitePool) -> sqlx::Result<UserRecord> {
     let uuid = Uuid::new_v4().to_string();
-    sqlx::query!(
-        "INSERT INTO users (uuid, name, email) VALUES (?, '', '')",
-        uuid
-    )
-    .execute(pool)
-    .await?;
-    Ok(UserRecord { token: uuid, name: String::new(), email: String::new() })
+    sqlx::query!("INSERT INTO users (uuid) VALUES (?)", uuid)
+        .execute(pool)
+        .await?;
+    Ok(UserRecord { token: uuid, name: String::new(), email: String::new(), slot_label: None })
+}
+
+pub async fn update_user(pool: &SqlitePool, user_uuid: &str, name: &str, email: &str, slot_id: Option<i64>) -> sqlx::Result<bool> {
+    let exists: i64 = sqlx::query_scalar!("SELECT COUNT(*) FROM users WHERE uuid = ?", user_uuid)
+        .fetch_one(pool)
+        .await?;
+    if exists == 0 {
+        return Ok(false);
+    }
+
+    let mut tx = pool.begin().await?;
+
+    if let Some(sid) = slot_id {
+        // Upsert booking with new slot, name, email
+        sqlx::query!(
+            "INSERT INTO bookings (user_uuid, slot_id, name, email) VALUES (?, ?, ?, ?)
+             ON CONFLICT(user_uuid) DO UPDATE SET slot_id = excluded.slot_id, name = excluded.name, email = excluded.email",
+            user_uuid, sid, name, email,
+        )
+        .execute(&mut *tx)
+        .await?;
+    } else {
+        // Update name/email in existing booking if one exists
+        sqlx::query!(
+            "UPDATE bookings SET name = ?, email = ? WHERE user_uuid = ?",
+            name, email, user_uuid,
+        )
+        .execute(&mut *tx)
+        .await?;
+    }
+
+    tx.commit().await?;
+    Ok(true)
+}
+
+pub async fn reset_booking(pool: &SqlitePool, user_uuid: &str) -> sqlx::Result<bool> {
+    let exists: i64 = sqlx::query_scalar!("SELECT COUNT(*) FROM users WHERE uuid = ?", user_uuid)
+        .fetch_one(pool)
+        .await?;
+    if exists == 0 {
+        return Ok(false);
+    }
+    sqlx::query!("DELETE FROM bookings WHERE user_uuid = ?", user_uuid)
+        .execute(pool)
+        .await?;
+    Ok(true)
 }
 
 pub async fn delete_user(pool: &SqlitePool, user_uuid: &str) -> sqlx::Result<bool> {
@@ -181,6 +254,12 @@ pub async fn delete_slot(pool: &SqlitePool, slot_id: i64) -> sqlx::Result<bool> 
         .execute(pool)
         .await?;
     Ok(result.rows_affected() > 0)
+}
+
+pub async fn get_admin_uuid(pool: &SqlitePool) -> sqlx::Result<String> {
+    sqlx::query_scalar!("SELECT uuid FROM admins LIMIT 1")
+        .fetch_one(pool)
+        .await
 }
 
 pub async fn ensure_admin(pool: &SqlitePool) -> sqlx::Result<Option<String>> {

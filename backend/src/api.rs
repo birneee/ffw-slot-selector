@@ -7,6 +7,7 @@ use crate::apis::{
     default::{
         BookSlotResponse, CreateSlotResponse, CreateUserResponse, DeleteSlotResponse,
         DeleteUserResponse, GetBookingPageResponse, ListSlotsResponse, ListUsersResponse,
+        ResetBookingResponse, UpdateUserResponse,
     },
     ErrorHandler,
 };
@@ -98,12 +99,105 @@ impl crate::apis::default::Default<()> for Api {
             }
         };
 
+        if body.name.trim().is_empty() || body.name.len() > 200 {
+            return Ok(BookSlotResponse::Status409_SlotIsFull(
+                models::ErrorResponse::new("invalid name".into()),
+            ));
+        }
+        if body.email.trim().is_empty() || body.email.len() > 200 || !body.email.contains('@') {
+            return Ok(BookSlotResponse::Status409_SlotIsFull(
+                models::ErrorResponse::new("invalid email".into()),
+            ));
+        }
+
         match db::book_slot(&self.pool, &user.uuid, &body.name, &body.email, body.slot_id).await {
             Ok(BookResult::Ok { slot_id, label }) => Ok(BookSlotResponse::Status200_BookingConfirmed(
                 models::BookSlotResponse::new(slot_id, label),
             )),
             Ok(BookResult::SlotFull) => Ok(BookSlotResponse::Status409_SlotIsFull(
                 models::ErrorResponse::new("slot is full".into()),
+            )),
+            Ok(BookResult::AlreadyBooked) => Ok(BookSlotResponse::Status409_SlotIsFull(
+                models::ErrorResponse::new("already booked".into()),
+            )),
+            Err(e) => {
+                tracing::error!("db error: {e}");
+                Err(())
+            }
+        }
+    }
+
+    async fn update_user(
+        &self,
+        _method: &Method,
+        _host: &Host,
+        _cookies: &CookieJar,
+        path_params: &models::UpdateUserPathParams,
+        body: &models::UpdateUserRequest,
+    ) -> Result<UpdateUserResponse, ()> {
+        let admin_uuid = path_params.admin_uuid.to_string();
+        match db::is_valid_admin(&self.pool, &admin_uuid).await {
+            Ok(false) | Err(_) => {
+                return Ok(UpdateUserResponse::Status403_Unauthorized(
+                    models::ErrorResponse::new("unauthorized".into()),
+                ))
+            }
+            _ => {}
+        }
+
+        if body.name.trim().is_empty() || body.name.len() > 200 {
+            return Ok(UpdateUserResponse::Status403_Unauthorized(
+                models::ErrorResponse::new("invalid name".into()),
+            ));
+        }
+        if body.email.trim().is_empty() || body.email.len() > 200 || !body.email.contains('@') {
+            return Ok(UpdateUserResponse::Status403_Unauthorized(
+                models::ErrorResponse::new("invalid email".into()),
+            ));
+        }
+
+        let user_uuid = path_params.user_uuid.to_string();
+        let slot_id = body.slot_id.as_ref().and_then(|n| match n {
+            crate::types::Nullable::Present(v) => Some(*v),
+            crate::types::Nullable::Null => None,
+        });
+        match db::update_user(&self.pool, &user_uuid, &body.name, &body.email, slot_id).await {
+            Ok(true) => {
+                let mut user = models::User::new(path_params.user_uuid, body.name.clone(), body.email.clone());
+                user.slot_label = None;
+                Ok(UpdateUserResponse::Status200_UserUpdated(user))
+            }
+            Ok(false) => Ok(UpdateUserResponse::Status404_UserNotFound(
+                models::ErrorResponse::new("user not found".into()),
+            )),
+            Err(e) => {
+                tracing::error!("db error: {e}");
+                Err(())
+            }
+        }
+    }
+
+    async fn reset_booking(
+        &self,
+        _method: &Method,
+        _host: &Host,
+        _cookies: &CookieJar,
+        path_params: &models::ResetBookingPathParams,
+    ) -> Result<ResetBookingResponse, ()> {
+        let admin_uuid = path_params.admin_uuid.to_string();
+        match db::is_valid_admin(&self.pool, &admin_uuid).await {
+            Ok(false) | Err(_) => {
+                return Ok(ResetBookingResponse::Status403_Unauthorized(
+                    models::ErrorResponse::new("unauthorized".into()),
+                ))
+            }
+            _ => {}
+        }
+        let user_uuid = path_params.user_uuid.to_string();
+        match db::reset_booking(&self.pool, &user_uuid).await {
+            Ok(true) => Ok(ResetBookingResponse::Status204_BookingCleared),
+            Ok(false) => Ok(ResetBookingResponse::Status404_UserNotFound(
+                models::ErrorResponse::new("user not found".into()),
             )),
             Err(e) => {
                 tracing::error!("db error: {e}");
@@ -163,7 +257,11 @@ impl crate::apis::default::Default<()> for Api {
             Ok(users) => Ok(ListUsersResponse::Status200_ListOfUsers(
                 users
                     .into_iter()
-                    .map(|u| models::User::new(u.token.parse().unwrap(), u.name, u.email))
+                    .map(|u| {
+                        let mut user = models::User::new(u.token.parse().unwrap(), u.name, u.email);
+                        user.slot_label = u.slot_label.map(crate::types::Nullable::Present);
+                        user
+                    })
                     .collect(),
             )),
             Err(e) => {
@@ -220,6 +318,17 @@ impl crate::apis::default::Default<()> for Api {
                 ))
             }
             _ => {}
+        }
+
+        if body.label.trim().is_empty() || body.label.len() > 100 {
+            return Ok(CreateSlotResponse::Status403_Unauthorized(
+                models::ErrorResponse::new("invalid label".into()),
+            ));
+        }
+        if body.max_bookings < 1 || body.max_bookings > 10_000 {
+            return Ok(CreateSlotResponse::Status403_Unauthorized(
+                models::ErrorResponse::new("invalid max_bookings".into()),
+            ));
         }
 
         match db::create_slot(&self.pool, &body.label, body.max_bookings).await {

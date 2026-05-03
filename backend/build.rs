@@ -20,8 +20,10 @@ fn setup_db() {
         .expect("sqlx not found — run inside nix develop");
     assert!(status.success(), "sqlx database create failed");
 
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    let migrations = format!("{manifest_dir}/migrations");
     let status = Command::new("sqlx")
-        .args(["migrate", "run", "--database-url", &db_url, "--source", "migrations"])
+        .args(["migrate", "run", "--database-url", &db_url, "--source", &migrations])
         .status()
         .expect("sqlx not found — run inside nix develop");
     assert!(status.success(), "sqlx migrate run failed");

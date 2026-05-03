@@ -10,6 +10,13 @@ fn main() {
 }
 
 fn build_frontend() {
+    let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
+    let out_dir = manifest_dir.join("../frontend/static");
+
+    if out_dir.join("frontend_bg.wasm").exists() {
+        return;
+    }
+
     let status = Command::new("cargo")
         .args([
             "build",
@@ -21,9 +28,7 @@ fn build_frontend() {
         .expect("cargo not found");
     assert!(status.success(), "frontend wasm build failed");
 
-    let manifest_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
     let wasm = manifest_dir.join("../target/wasm32-unknown-unknown/release/frontend.wasm");
-    let out_dir = manifest_dir.join("../frontend/static");
 
     let status = Command::new("wasm-bindgen")
         .args([

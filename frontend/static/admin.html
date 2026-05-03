@@ -4,7 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin</title>
+  <link rel="icon" type="image/png" href="/wappen.png" />
   <link rel="stylesheet" href="/style.css" />
+  <style>
+    body { max-width: 1000px; }
+  </style>
   <link rel="stylesheet" href="https://www.nerdfonts.com/assets/css/webfont.css" />
 </head>
 <body>
@@ -23,6 +27,7 @@
             <th>Token</th>
             <th>Name</th>
             <th>E-Mail</th>
+            <th>Zeitfenster</th>
             <th></th>
           </tr>
         </thead>
@@ -30,11 +35,14 @@
           <tr><td colspan="4" class="admin-empty loading">Lädt…</td></tr>
         </tbody>
       </table>
-      <button id="add-user-btn" class="btn btn-primary">Benutzer hinzufügen</button>
+      <div class="admin-btn-row">
+        <button id="add-user-btn" class="btn btn-primary">Benutzer hinzufügen</button>
+        <button id="download-csv-btn" class="btn btn-secondary">CSV herunterladen</button>
+      </div>
     </section>
 
     <section>
-      <h2>Zeitslots</h2>
+      <h2>Zeitfenster</h2>
       <table class="admin-table">
         <thead>
           <tr>
