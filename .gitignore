@@ -9,3 +9,6 @@
 /data.db-wal
 /target
 /result
+/qrcodes
+/benutzer.csv
+/scripts/*.pdf

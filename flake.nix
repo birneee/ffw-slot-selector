@@ -124,7 +124,10 @@
           };
 
           devShells.default = pkgs.mkShell {
-            packages = tools;
+            packages = tools ++ [
+              pkgs.qrencode # gen_qrcodes.sh
+              pkgs.typst    # labels.typ
+            ];
           };
         };
     };
