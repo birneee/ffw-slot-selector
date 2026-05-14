@@ -12,11 +12,13 @@ use crate::apis::{
     ErrorHandler,
 };
 use crate::db::{self, BookResult};
+use crate::email::EmailConfig;
 use crate::models;
 
 #[derive(Clone)]
 pub struct Api {
     pub pool: sqlx::SqlitePool,
+    pub email_config: Option<EmailConfig>,
 }
 
 impl AsRef<Api> for Api {
@@ -111,9 +113,16 @@ impl crate::apis::default::Default<()> for Api {
         }
 
         match db::book_slot(&self.pool, &user.uuid, &body.name, &body.email, body.slot_id).await {
-            Ok(BookResult::Ok { slot_id, label }) => Ok(BookSlotResponse::Status200_BookingConfirmed(
-                models::BookSlotResponse::new(slot_id, label),
-            )),
+            Ok(BookResult::Ok { slot_id, label }) => {
+                if let Some(cfg) = &self.email_config {
+                    if let Err(e) = crate::email::send_confirmation(cfg, &body.email, &body.name, &label).await {
+                        tracing::warn!("failed to send confirmation email to {}: {e}", body.email);
+                    }
+                }
+                Ok(BookSlotResponse::Status200_BookingConfirmed(
+                    models::BookSlotResponse::new(slot_id, label),
+                ))
+            }
             Ok(BookResult::SlotFull) => Ok(BookSlotResponse::Status409_SlotIsFull(
                 models::ErrorResponse::new("slot is full".into()),
             )),

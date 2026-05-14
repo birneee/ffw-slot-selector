@@ -1,5 +1,6 @@
 pub mod db;
 pub mod api;
+pub mod email;
 
 #[allow(warnings)]
 #[path = "generated/src/types.rs"]

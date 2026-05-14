@@ -13,6 +13,15 @@ use tracing_subscriber::EnvFilter;
 struct Args {
     #[arg(short, long, default_value_t = 3000)]
     port: u16,
+
+    #[arg(long, env = "SMTP_HOST", default_value = "smtp.strato.de")]
+    smtp_host: String,
+    #[arg(long, env = "SMTP_PORT", default_value_t = 465)]
+    smtp_port: u16,
+    #[arg(long, env = "SMTP_USER", default_value = "info@feuerwehreibach.de")]
+    smtp_user: String,
+    #[arg(long, env = "SMTP_PASSWORD")]
+    smtp_password: Option<String>,
 }
 
 mod admin;
@@ -80,7 +89,23 @@ async fn main() -> anyhow::Result<()> {
     let admin_b64 = URL_SAFE_NO_PAD.encode(uuid::Uuid::parse_str(&admin_uuid)?.as_bytes());
     tracing::info!("Admin panel: /admin?uuid={admin_b64}");
 
-    let api = Api { pool };
+    let email_config = if let Some(ref smtp_password) = args.smtp_password {
+        match backend::email::EmailConfig::new(&args.smtp_host, args.smtp_port, &args.smtp_user, smtp_password, &args.smtp_user) {
+            Ok(cfg) => {
+                tracing::info!("email confirmation enabled (SMTP: {}:{})", args.smtp_host, args.smtp_port);
+                Some(cfg)
+            }
+            Err(e) => {
+                tracing::warn!("invalid SMTP config, email disabled: {e}");
+                None
+            }
+        }
+    } else {
+        tracing::info!("SMTP_PASSWORD not set, email confirmation disabled");
+        None
+    };
+
+    let api = Api { pool, email_config };
 
     let app = api_server::new(api)
         .route("/", get(|| async { Html(INDEX_HTML) }))

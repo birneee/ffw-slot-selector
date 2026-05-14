@@ -1,0 +1,36 @@
+Subject: Buchungsbestätigung – Bungee Jumping - 150 Jahre Freiwillige Feuerwehr Eibach
+
+<!DOCTYPE html>
+<html lang="de">
+<head><meta charset="utf-8"></head>
+<body>
+<p>Servus {{name}},</p>
+<p>dein Zeitfenster für das Bungee Jumping an unserem 150-jährigen Gründungsfest wurde erfolgreich gebucht.</p>
+<p><strong>Dein Zeitfenster: Samstag, 25.07.2026, {{slot}}</strong></p>
+<p>Wichtige Informationen:</p>
+<ul>
+  <li>Bitte erscheine 30 Minuten vor Beginn deines Zeitfensters an der Anmeldung!</li>
+  <li><strong>Teilnahme nur möglich nach Vorlage des originalen Gutscheins</strong></li>
+  <li>Dein Gewicht muss zwischen 50 kg und 118 kg liegen</li>
+  <li>Teilnahme ab 16 Jahren, bis 18 Jahren mit Genehmigung eines Erziehungsberechtigten</li>
+  <li>Normale physische Gesundheit</li>
+  <li>Plane für Anmeldung, Einweisung und Sprung eine Stunde ein</li>
+</ul>
+<p>
+  Mehr Informationen findest du auf unserer Webseite:<br>
+  <a href="https://eibach2026.de/">https://eibach2026.de/</a><br>
+</p>
+<p>
+  Für Rückfragen stehen wir dir jederzeit zur Verfügung!<br>
+  Unter <a href="mailto:info@feuerwehreibach.de">info@feuerwehreibach.de</a>
+</p>
+<p>Vielen Dank!</p>
+<p>Mit freundlichen Grüßen,</p>
+<p>
+  Freiwillige Feuerwehr Eibach<br>
+  Eibach 27a<br>
+  84405 Dorfen
+</p>
+<img src="cid:wappen" alt="Freiwillige Feuerwehr Eibach" width="100" style="width:100px;max-width:100px;display:block;margin-top:16px;">
+</body>
+</html>

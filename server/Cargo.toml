@@ -9,7 +9,7 @@ backend = { path = "../backend" }
 axum = { version = "0.8" }
 tokio = { workspace = true }
 anyhow = "1"
-clap = { version = "4", features = ["derive"] }
+clap = { version = "4", features = ["derive", "env"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tower-http = { version = "0.6" }
