@@ -67,7 +67,7 @@
               };
               serviceConfig = {
                 ExecStart = "${inputs.self.packages.${pkgs.system}.default}/bin/server --port ${toString cfg.port}";
-                EnvironmentFiles = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
+                EnvironmentFile = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
                 StateDirectory = "ffw-slot-selector";
                 DynamicUser = true;
                 Restart = "on-failure";
