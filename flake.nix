@@ -43,6 +43,17 @@
               default = "info";
               description = "Log level (RUST_LOG format, e.g. info, debug, warn).";
             };
+            environmentFile = lib.mkOption {
+              type = lib.types.nullOr lib.types.path;
+              default = null;
+              description = ''
+                Path to a file containing environment variables in KEY=value
+                format. Use this to inject secrets such as SMTP_PASSWORD
+                without putting them in the Nix store. Compatible with
+                sops-nix: set sops.secrets.ffw-slot-selector.format = "dotenv"
+                and point this option at the rendered secret path.
+              '';
+            };
           };
 
           config = lib.mkIf cfg.enable {
@@ -56,6 +67,7 @@
               };
               serviceConfig = {
                 ExecStart = "${inputs.self.packages.${pkgs.system}.default}/bin/server --port ${toString cfg.port}";
+                EnvironmentFiles = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
                 StateDirectory = "ffw-slot-selector";
                 DynamicUser = true;
                 Restart = "on-failure";
