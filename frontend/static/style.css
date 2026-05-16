@@ -95,6 +95,10 @@ section {
   gap: 0.75rem;
 }
 
+ul {
+  padding-left: 1.5rem;
+}
+
 /* ── Info card (view page) ── */
 
 .info-card {
@@ -240,11 +244,13 @@ section {
 
 /* ── Booking state visibility ── */
 
+.invalid-code,
 .not-booked,
 .booked {
   display: none;
 }
 
+.invalid-code.visible,
 .not-booked.visible,
 .booked.visible {
   display: flex;

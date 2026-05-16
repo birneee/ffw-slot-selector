@@ -1,0 +1,26 @@
+Servus {{name}},
+
+dein Zeitfenster für das Bungee Jumping an unserem 150-jährigen Gründungsfest wurde erfolgreich gebucht.
+
+Dein Zeitfenster: Samstag, 25.07.2026, {{slot}}
+
+Wichtige Informationen:
+- Bitte erscheine 30 Minuten vor Beginn deines Zeitfensters an der Anmeldung!
+- Teilnahme nur möglich nach Vorlage des originalen Gutscheins
+- Dein Gewicht muss zwischen 50 kg und 118 kg liegen
+- Teilnahme ab 16 Jahren, bis 18 Jahren mit Genehmigung eines Erziehungsberechtigten
+- Normale physische Gesundheit
+- Plane für Anmeldung, Einweisung und Sprung eine Stunde ein
+
+Mehr Informationen findest du auf unserer Webseite:
+https://eibach2026.de/
+
+Für Rückfragen stehen wir dir jederzeit zur Verfügung!
+Unter info@feuerwehreibach.de
+
+Vielen Dank!
+
+Mit freundlichen Grüßen,
+Freiwillige Feuerwehr Eibach
+Eibach 27a
+84405 Dorfen

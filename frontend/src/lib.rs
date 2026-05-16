@@ -122,10 +122,11 @@ pub fn main() {
     }
 
     let Some((uuid_str, is_edit)) = parse_path() else {
+        show_invalid_code();
         return;
     };
     let Ok(uuid) = uuid_str.parse::<uuid::Uuid>() else {
-        show_error("Dieser Link ist ungültig oder wurde bereits gelöscht.");
+        show_invalid_code();
         return;
     };
 
@@ -154,7 +155,7 @@ async fn render_view(uuid: uuid::Uuid) {
             let data = resp.into_inner();
             mount_view(uuid, &data);
         }
-        Err(_) => show_error("Dieser Link ist ungültig oder wurde bereits gelöscht."),
+        Err(_) => show_invalid_code(),
     }
 }
 
@@ -216,7 +217,7 @@ async fn render_edit(uuid: uuid::Uuid) {
             }
             mount_edit(uuid, &data);
         }
-        Err(_) => show_error("Dieser Link ist ungültig oder wurde bereits gelöscht."),
+        Err(_) => show_invalid_code(),
     }
 }
 
@@ -933,6 +934,13 @@ fn show_qr_modal(url: &str, token_b64: &str) {
     });
     overlay.add_event_listener_with_callback("click", onclick2.as_ref().unchecked_ref()).unwrap();
     onclick2.forget();
+}
+
+fn show_invalid_code() {
+    let doc = document();
+    if let Some(el) = doc.query_selector(".invalid-code").ok().flatten() {
+        el.set_class_name("invalid-code visible");
+    }
 }
 
 fn show_error(msg: &str) {

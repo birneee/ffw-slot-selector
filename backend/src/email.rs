@@ -8,6 +8,7 @@ use lettre::{
 const WAPPEN: &[u8] = include_bytes!("../../frontend/static/wappen.png");
 
 const TEMPLATE: &str = include_str!("../templates/confirmation.eml");
+const TEMPLATE_PLAIN: &str = include_str!("../templates/confirmation.txt");
 
 #[derive(Clone)]
 pub struct EmailConfig {
@@ -36,21 +37,29 @@ impl EmailConfig {
 }
 
 pub async fn send_confirmation(config: &EmailConfig, to: &str, name: &str, slot: &str) -> Result<()> {
-    let (subject, body) = parse_template(name, slot)?;
+    let (subject, html, plain) = parse_template(name, slot)?;
 
     let html_part = SinglePart::builder()
         .header(ContentType::TEXT_HTML)
-        .body(body);
+        .body(html);
 
     let wappen_part = Attachment::new_inline("wappen".to_string())
         .body(WAPPEN.to_vec(), "image/png".parse().unwrap());
+
+    let related = MultiPart::related()
+        .singlepart(html_part)
+        .singlepart(wappen_part);
+
+    let plain_part = SinglePart::builder()
+        .header(ContentType::TEXT_PLAIN)
+        .body(plain);
 
     let email = Message::builder()
         .from(config.from.clone())
         .to(to.parse()?)
         .bcc(config.from.clone())
         .subject(subject)
-        .multipart(MultiPart::related().singlepart(html_part).singlepart(wappen_part))?;
+        .multipart(MultiPart::alternative().singlepart(plain_part).multipart(related))?;
 
     config.mailer.send(email).await?;
     Ok(())
@@ -63,7 +72,7 @@ fn html_escape(s: &str) -> String {
         .replace('"', "&quot;")
 }
 
-fn parse_template(name: &str, slot: &str) -> Result<(String, String)> {
+fn parse_template(name: &str, slot: &str) -> Result<(String, String, String)> {
     let (headers, body) = TEMPLATE
         .split_once("\n\n")
         .ok_or_else(|| anyhow::anyhow!("email template missing blank line between headers and body"))?;
@@ -74,10 +83,10 @@ fn parse_template(name: &str, slot: &str) -> Result<(String, String)> {
         .map(|s| s.trim().to_string())
         .ok_or_else(|| anyhow::anyhow!("email template missing Subject header"))?;
 
-    let name = html_escape(name);
-    let slot = html_escape(slot);
-    let subject = subject.replace("{{name}}", &name).replace("{{slot}}", &slot);
-    let body = body.replace("{{name}}", &name).replace("{{slot}}", &slot);
+    let name_escaped = html_escape(name);
+    let subject = subject.replace("{{name}}", &name_escaped).replace("{{slot}}", slot);
+    let html = body.replace("{{name}}", &name_escaped).replace("{{slot}}", slot);
+    let plain = TEMPLATE_PLAIN.replace("{{name}}", name).replace("{{slot}}", slot);
 
-    Ok((subject, body))
+    Ok((subject, html, plain))
 }
