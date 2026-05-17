@@ -21,13 +21,23 @@
       ];
 
       flake.nixosModules.default =
-        { config, lib, pkgs, ... }:
+        {
+          config,
+          lib,
+          pkgs,
+          ...
+        }:
         let
           cfg = config.services.ffw-slot-selector;
         in
         {
           options.services.ffw-slot-selector = {
             enable = lib.mkEnableOption "ffw-slot-selector";
+            package = lib.mkOption {
+              type = lib.types.package;
+              default = inputs.self.packages.${pkgs.stdenv.hostPlatform.system}.default;
+              description = "The ffw-slot-selector package to use.";
+            };
             port = lib.mkOption {
               type = lib.types.port;
               default = 3000;
@@ -66,7 +76,7 @@
                 RUST_LOG = cfg.logLevel;
               };
               serviceConfig = {
-                ExecStart = "${inputs.self.packages.${pkgs.system}.default}/bin/server --port ${toString cfg.port}";
+                ExecStart = "${cfg.package}/bin/server --port ${toString cfg.port}";
                 EnvironmentFile = lib.optional (cfg.environmentFile != null) cfg.environmentFile;
                 StateDirectory = "ffw-slot-selector";
                 DynamicUser = true;
@@ -82,7 +92,10 @@
                 CapabilityBoundingSet = "";
                 NoNewPrivileges = true;
                 RestrictSUIDSGID = true;
-                SystemCallFilter = [ "@system-service" "~@privileged" ];
+                SystemCallFilter = [
+                  "@system-service"
+                  "~@privileged"
+                ];
                 SystemCallArchitectures = "native";
 
                 # Network & misc
@@ -131,14 +144,17 @@
                 --out-name frontend \
                 target/wasm32-unknown-unknown/release/frontend.wasm
             '';
-            cargoBuildFlags = [ "-p" "server" ];
+            cargoBuildFlags = [
+              "-p"
+              "server"
+            ];
             doCheck = false;
           };
 
           devShells.default = pkgs.mkShell {
             packages = tools ++ [
               pkgs.qrencode # gen_qrcodes.sh
-              pkgs.typst    # labels.typ
+              pkgs.typst # labels.typ
             ];
           };
         };
